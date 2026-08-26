@@ -40,7 +40,7 @@ The e2e suite spins up a Verdaccio registry, publishes the plugin at version `0.
 
 ## Things worth knowing before you change the code
 
-**The compile target is load-bearing.** `playwright-bdd` discovers a step's fixtures by parsing `fn.toString()`. If `packages/nx-bdd/tsconfig.json` targets anything that downlevels async functions, every shared step is emitted as a `tslib.__awaiter(_a, ...)` wrapper and `playwright-bdd` rejects it with *"First argument must use the object destructuring pattern"* — in the consumer's workspace, at `bddgen` time. A regression test in `src/runtime/runtime.spec.ts` guards this.
+**The compile target is load-bearing.** `playwright-bdd` discovers a step's fixtures by parsing `fn.toString()`. If `packages/nx-bdd/tsconfig.json` targets anything that downlevels async functions, every shared step is emitted as a `tslib.__awaiter(_a, ...)` wrapper and `playwright-bdd` rejects it with _"First argument must use the object destructuring pattern"_ — in the consumer's workspace, at `bddgen` time. A regression test in `src/runtime/runtime.spec.ts` guards this.
 
 **Step registration is a side effect.** `src/index.ts` deliberately does not re-export `runtime/steps`, so importing the package root never registers Cucumber steps. Registration only happens through the `@willstjohnbacon/nx-bdd/steps` entry point.
 
@@ -73,7 +73,7 @@ Two things to know:
 - **`nx local-registry` rewrites `~/.npmrc`** to point at `http://127.0.0.1:4873`
   while it runs, and restores it on a clean shutdown. If Verdaccio is killed
   abruptly, `~/.npmrc` can be left pointing at a dead registry and every `npm
-  install` on the machine will hang or fail. Fix it with
+install` on the machine will hang or fail. Fix it with
   `npm config delete registry`.
 - **`registry:publish` pins `--registry` on purpose.** Without it, running the
   script while Verdaccio is down would publish the package to public npm.
@@ -120,8 +120,67 @@ remove it.
 
 ## Releasing
 
+Releases are automated. **`develop` is where work happens; merging `develop` into
+`main` cuts a release.**
+
+On every push to `main`, [`.github/workflows/release.yml`](.github/workflows/release.yml)
+runs lint, unit tests and the e2e suite, then hands over to
+[Nx Release](https://nx.dev/features/manage-releases), which:
+
+1. reads the commits since the last `v*` tag and derives the semver bump,
+2. writes the new version into `packages/nx-bdd/package.json` and the built
+   `dist/packages/nx-bdd/package.json`,
+3. prepends an entry to `CHANGELOG.md`,
+4. commits, tags `vX.Y.Z` and pushes,
+5. publishes `dist/packages/nx-bdd` to npm with provenance,
+6. creates the matching GitHub Release.
+
+### Commit messages decide the version
+
+The bump comes from [Conventional Commits](https://www.conventionalcommits.org),
+so commit messages are the release notes:
+
+| Commit                            | Bump  | 0.1.0 becomes |
+| --------------------------------- | ----- | ------------- |
+| `fix(nx-bdd): ...`                | patch | `0.1.1`       |
+| `feat(nx-bdd): ...`               | minor | `0.2.0`       |
+| `feat(nx-bdd)!: ...`              | major | `1.0.0`       |
+| `chore:`, `docs:`, `test:`, `ci:` | none  | `0.1.0`       |
+
+A commit with no releasable type produces no release — the workflow runs, finds
+nothing to version and exits.
+
+`release.version.adjustSemverBumpsForZeroMajorVersion` is set to `false` in
+[`nx.json`](nx.json), so the table above holds while the major version is still
+`0`. That means a breaking change pre-1.0 goes straight to `1.0.0`. Flip it to
+`true` if you would rather stay in `0.x` — but be aware it also demotes `feat`
+to a patch bump.
+
+### One-time setup
+
+| Where                                   | What                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| npm                                     | A granular access token with **Read and write** on `@willstjohnbacon/nx-bdd` |
+| GitHub → Secrets → Actions              | That token, as `NPM_TOKEN`                                                   |
+| GitHub → Actions → Workflow permissions | **Read and write permissions**                                               |
+
+`GITHUB_TOKEN` is provided by Actions; nothing to configure for the release
+itself. If `main` is a protected branch, allow `github-actions[bot]` to bypass
+the push restriction, or the tag and changelog commit cannot land.
+
+### Previewing and manual runs
+
 ```sh
-npx nx release
+# See exactly what the next release would do — writes nothing
+npx nx release --dry-run
+
+# Trigger a release by hand (Actions → Release → Run workflow),
+# optionally ticking "dry-run"
+gh workflow run release.yml
 ```
 
-Version and publish are driven by [Nx Release](https://nx.dev/features/manage-releases); the package root is `dist/packages/nx-bdd`.
+The release commit is `chore(release): publish X.Y.Z [skip ci]`, so it does not
+re-trigger the workflow.
+
+The first release has no `v*` tag to compare against, so the workflow passes
+`--first-release` automatically; the version falls back to the one on disk.

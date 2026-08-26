@@ -3,7 +3,27 @@
   "version": "0.0.1",
   "description": "Standardised Cucumber BDD, Playwright and Allure architecture for Nx workspaces.",
   "license": "MIT",
-  "keywords": ["nx", "nx-plugin", "bdd", "cucumber", "playwright", "allure", "e2e"],
+  "homepage": "https://github.com/willstjohnbacon/nx-bdd#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willstjohnbacon/nx-bdd.git",
+    "directory": "packages/nx-bdd"
+  },
+  "bugs": {
+    "url": "https://github.com/willstjohnbacon/nx-bdd/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "nx",
+    "nx-plugin",
+    "bdd",
+    "cucumber",
+    "playwright",
+    "allure",
+    "e2e"
+  ],
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -30,9 +50,15 @@
   },
   "typesVersions": {
     "*": {
-      "fixtures": ["./src/runtime/fixtures/index.d.ts"],
-      "steps": ["./src/runtime/steps/index.d.ts"],
-      "factories": ["./src/runtime/factories/index.d.ts"]
+      "fixtures": [
+        "./src/runtime/fixtures/index.d.ts"
+      ],
+      "steps": [
+        "./src/runtime/steps/index.d.ts"
+      ],
+      "factories": [
+        "./src/runtime/factories/index.d.ts"
+      ]
     }
   },
   "dependencies": {
@@ -44,7 +70,11 @@
     "playwright-bdd": ">=9.0.0"
   },
   "peerDependenciesMeta": {
-    "@playwright/test": { "optional": true },
-    "playwright-bdd": { "optional": true }
+    "@playwright/test": {
+      "optional": true
+    },
+    "playwright-bdd": {
+      "optional": true
+    }
   }
 }

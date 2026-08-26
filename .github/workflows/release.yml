@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview the release without tagging, publishing or pushing'
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the release commit + tag, create the GitHub Release
+  id-token: write # npm provenance
+
+jobs:
+  verify:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx nx run-many -t lint build
+
+      - run: npx nx run-many -t test --configuration=ci
+
+      - run: npx nx run nx-bdd-e2e:e2e
+        timeout-minutes: 30
+
+  release:
+    name: Version, tag, publish
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      # Full history and tags: `nx release` derives the current version from the
+      # latest `v*` tag and the next one from the commits since it.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # There is no previous tag on the very first release, so conventional
+      # commits has nothing to diff against and the version falls back to disk.
+      - name: Detect first release
+        id: first
+        run: |
+          if [ -z "$(git tag -l 'v*')" ]; then
+            echo "flag=--first-release" >> "$GITHUB_OUTPUT"
+          else
+            echo "flag=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: nx release
+        run: npx nx release --yes ${{ steps.first.outputs.flag }} ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
