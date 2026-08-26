@@ -1,6 +1,6 @@
 {
   "name": "@willstjohnbacon/nx-bdd",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Standardised Cucumber BDD, Playwright and Allure architecture for Nx workspaces.",
   "license": "MIT",
   "homepage": "https://github.com/willstjohnbacon/nx-bdd#readme",
