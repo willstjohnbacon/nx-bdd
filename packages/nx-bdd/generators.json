@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "name": "@willstjohnbacon/nx-bdd",
+  "version": "0.0.1",
+  "generators": {
+    "setup-e2e": {
+      "factory": "./src/generators/setup-e2e/generator",
+      "schema": "./src/generators/setup-e2e/schema.json",
+      "description": "Apply the standard Cucumber BDD + Allure architecture to an Nx Playwright application."
+    }
+  }
+}
