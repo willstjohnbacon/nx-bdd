@@ -1,0 +1,50 @@
+{
+  "name": "@willstjohnbacon/nx-bdd",
+  "version": "0.0.1",
+  "description": "Standardised Cucumber BDD, Playwright and Allure architecture for Nx workspaces.",
+  "license": "MIT",
+  "keywords": ["nx", "nx-plugin", "bdd", "cucumber", "playwright", "allure", "e2e"],
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "generators": "./generators.json",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./fixtures": {
+      "types": "./src/runtime/fixtures/index.d.ts",
+      "default": "./src/runtime/fixtures/index.js"
+    },
+    "./steps": {
+      "types": "./src/runtime/steps/index.d.ts",
+      "default": "./src/runtime/steps/index.js"
+    },
+    "./factories": {
+      "types": "./src/runtime/factories/index.d.ts",
+      "default": "./src/runtime/factories/index.js"
+    },
+    "./generators.json": "./generators.json",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "fixtures": ["./src/runtime/fixtures/index.d.ts"],
+      "steps": ["./src/runtime/steps/index.d.ts"],
+      "factories": ["./src/runtime/factories/index.d.ts"]
+    }
+  },
+  "dependencies": {
+    "@nx/devkit": "^23.1.1",
+    "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.53.0",
+    "playwright-bdd": ">=9.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": { "optional": true },
+    "playwright-bdd": { "optional": true }
+  }
+}

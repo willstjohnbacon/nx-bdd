@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    // playwright-bdd discovers a step's fixtures by parsing `fn.toString()`, so
+    // the shipped step definitions must keep their `async ({ page }) => {}`
+    // shape. Downlevelling async functions (target es2015, as tsconfig.base
+    // sets) rewrites them into tslib `__awaiter(_a, ...)` wrappers, and
+    // playwright-bdd then rejects every shared step with "First argument must
+    // use the object destructuring pattern".
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"]
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
