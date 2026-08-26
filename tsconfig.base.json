@@ -15,7 +15,16 @@
     "skipDefaultLibCheck": true,
     "strict": false,
     "paths": {
-      "@willstjohnbacon/nx-bdd": ["./packages/nx-bdd/src/index.ts"]
+      "@willstjohnbacon/nx-bdd": ["./packages/nx-bdd/src/index.ts"],
+      "@willstjohnbacon/nx-bdd/factories": [
+        "./packages/nx-bdd/src/runtime/factories/index.ts"
+      ],
+      "@willstjohnbacon/nx-bdd/fixtures": [
+        "./packages/nx-bdd/src/runtime/fixtures/index.ts"
+      ],
+      "@willstjohnbacon/nx-bdd/steps": [
+        "./packages/nx-bdd/src/runtime/steps/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

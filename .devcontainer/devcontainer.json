@@ -9,7 +9,8 @@
   },
   "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.npmrc,target=/home/vscode/.npmrc,type=bind,readonly,consistency=cached"
   ],
   "remoteUser": "vscode",
   "containerUser": "vscode",

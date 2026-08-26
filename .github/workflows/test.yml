@@ -1,0 +1,97 @@
+name: Test
+
+# Reusable so `ci.yml` (pull requests, develop) and `release.yml` (main) run
+# byte-identical checks — a release can never ship something CI did not run.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Lint, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx nx run-many -t lint build
+
+      - run: npx nx run-many -t test --configuration=ci
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-unit
+          path: dist/allure-results
+          if-no-files-found: ignore
+
+  acceptance:
+    name: BDD acceptance suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # The workspace eats its own cooking: demo-e2e was scaffolded by
+      # `setup-e2e`, its features are written against the shared steps this
+      # package exports, and it drives a real browser against apps/demo-app.
+      - run: npx nx run demo-e2e:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/demo-e2e/playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-acceptance
+          path: dist/allure-results
+          if-no-files-found: ignore
+
+  integration:
+    name: Generator against a published package
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Publishes the plugin to a local Verdaccio, then installs it into a
+      # throwaway Nx workspace exactly as a consumer would.
+      - run: npx nx run nx-bdd-e2e:e2e

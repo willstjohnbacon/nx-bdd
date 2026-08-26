@@ -2,7 +2,9 @@
 
 Provisions any Nx project with the standard organisational Cucumber BDD and Allure reporting architecture.
 
-It is designed to sit alongside our NestJS microservices and Angular frontends, ensuring End-to-End state and mocks are perfectly aligned. Every suite in the workspace shares one Playwright configuration shape, one set of fixtures, one set of base steps and one Allure results directory.
+It works with any Nx project you can point a browser at — Angular, Nest, Next, Remix, Vite, Express, or a service written in something other than Node. The only hard requirement is an Nx workspace with Playwright; the app under test is just a `baseUrl`.
+
+Every suite in the workspace shares one Playwright configuration shape, one set of fixtures, one set of base steps and one Allure results directory, so End-to-End state and mocks stay aligned across apps.
 
 ## What you get
 
@@ -82,8 +84,27 @@ Feature files are not tests until `bddgen` compiles them, so the generator adds 
 | `--project` | *(required)* | The Nx project to configure. |
 | `--featuresGlob` | `src/features/**/*.feature` | Where feature files live, relative to the project root. |
 | `--stepsGlob` | `src/steps/**/*.ts` | Where step definitions live, relative to the project root. |
+| `--baseUrl` | `http://localhost:4200` | URL the browser navigates to when `BASE_URL` is unset. |
+| `--apiBaseUrl` | `http://localhost:3000/api` | Base URL of the API when `API_BASE_URL` is unset. |
 | `--skipFormat` | `false` | Skip formatting generated files. |
 | `--skipPackageJson` | `false` | Skip adding dependencies. |
+
+The two URL defaults suit an Angular app served by `nx serve` with a Nest API
+behind it. Anything else is a flag away:
+
+```sh
+# A Next.js or Remix app with its API routes in-process
+npx nx g @willstjohnbacon/nx-bdd:setup-e2e --project=web-e2e \
+  --baseUrl=http://localhost:3000 --apiBaseUrl=http://localhost:3000/api
+
+# A Vite dev server
+npx nx g @willstjohnbacon/nx-bdd:setup-e2e --project=web-e2e \
+  --baseUrl=http://localhost:5173
+```
+
+Both only set the fallback written into the generated config — `BASE_URL` and
+`API_BASE_URL` still override at run time, which is how CI points the same suite
+at a deployed environment.
 
 ## Step 4: Writing tests
 
@@ -120,7 +141,7 @@ Import `Given` / `When` / `Then` from **`@willstjohnbacon/nx-bdd/fixtures`**, no
 | `adminPage` | `Page` | A page inside `adminContext`. |
 | `loginAs(role)` | `(role: string) => Promise<void>` | Authenticates the ambient `page` as a named role. |
 | `cleanup` | `CleanupRegistry` | `cleanup.add(fn)` — teardown work run after the scenario, in reverse order. |
-| `apiBaseUrl` | `string` | Base URL of the microservice API under test. |
+| `apiBaseUrl` | `string` | Base URL of the HTTP API backing the suite. |
 
 Configure them under `use` in the generated config:
 
@@ -192,7 +213,7 @@ is pure Node. The older `allure-commandline` wraps a Java binary and fails on an
 machine or CI runner without a JRE on `PATH`. Note the Allure 3 CLI has no
 `--clean` flag; pass `-o` to choose the output directory.
 
-Every project writes into the workspace-level `dist/allure-results`, so one `allure generate` covers unit, microservice API and BDD E2E runs together. The config anchors that path on `workspaceRoot` rather than a relative path, because Allure resolves reporter paths against `process.cwd()` — which differs between Nx's inferred Playwright targets and the legacy `@nx/playwright:playwright` executor.
+Every project writes into the workspace-level `dist/allure-results`, so one `allure generate` covers unit, API and BDD E2E runs together. The config anchors that path on `workspaceRoot` rather than a relative path, because Allure resolves reporter paths against `process.cwd()` — which differs between Nx's inferred Playwright targets and the legacy `@nx/playwright:playwright` executor.
 
 ## Troubleshooting
 

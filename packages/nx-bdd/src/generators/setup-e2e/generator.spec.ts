@@ -70,6 +70,32 @@ describe('setup-e2e generator', () => {
       expect(config).toContain(`'src/bdd/steps/**/*.ts'`);
     });
 
+    it('defaults the URLs to the Angular and Nest dev server ports', async () => {
+      await setupE2eGenerator(tree, { project: PROJECT });
+
+      const config = read('playwright.config.ts');
+      expect(config).toContain(`process.env['BASE_URL'] || 'http://localhost:4200'`);
+      expect(config).toContain(
+        `process.env['API_BASE_URL'] || 'http://localhost:3000/api'`
+      );
+    });
+
+    it('honours custom base URLs for apps on other ports', async () => {
+      await setupE2eGenerator(tree, {
+        project: PROJECT,
+        baseUrl: 'http://localhost:5173',
+        apiBaseUrl: 'https://api.example.test/v2',
+      });
+
+      const config = read('playwright.config.ts');
+      expect(config).toContain(`process.env['BASE_URL'] || 'http://localhost:5173'`);
+      expect(config).toContain(
+        `process.env['API_BASE_URL'] || 'https://api.example.test/v2'`
+      );
+      // The env vars still win, so one suite can be aimed at a deployed stack.
+      expect(config).not.toContain('http://localhost:4200');
+    });
+
     it('writes .mts when the app already uses the ESM config convention', async () => {
       // @nx/playwright generates playwright.config.mts; a .ts written beside it
       // would silently shadow it, since Playwright probes .ts first.

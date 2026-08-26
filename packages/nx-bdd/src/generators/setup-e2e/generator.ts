@@ -41,6 +41,12 @@ const CJS_CONFIG = 'playwright.config.ts';
 const DEFAULT_FEATURES_GLOB = 'src/features/**/*.feature';
 const DEFAULT_STEPS_GLOB = 'src/steps/**/*.ts';
 
+// Fallbacks for when BASE_URL / API_BASE_URL are unset. The ports match the Nx
+// defaults for `nx serve` on an Angular app and a Nest API, which is the most
+// common pairing — pass --baseUrl / --apiBaseUrl for anything else.
+const DEFAULT_BASE_URL = 'http://localhost:4200';
+const DEFAULT_API_BASE_URL = 'http://localhost:3000/api';
+
 export async function setupE2eGenerator(
   tree: Tree,
   options: SetupE2eGeneratorSchema
@@ -49,6 +55,8 @@ export async function setupE2eGenerator(
     project,
     featuresGlob = DEFAULT_FEATURES_GLOB,
     stepsGlob = DEFAULT_STEPS_GLOB,
+    baseUrl = DEFAULT_BASE_URL,
+    apiBaseUrl = DEFAULT_API_BASE_URL,
     skipFormat = false,
     skipPackageJson = false,
   } = options;
@@ -87,6 +95,8 @@ export async function setupE2eGenerator(
     project,
     featuresGlob,
     stepsGlob,
+    baseUrl,
+    apiBaseUrl,
   });
 
   // 3. Create the standardised BDD directory structure.

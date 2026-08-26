@@ -32,7 +32,7 @@ export interface CleanupRegistry {
 
 /** Options every consuming app can set via `use: {}` in playwright.config.ts. */
 export interface NxBddOptions {
-  /** Base URL of the microservice API backing the suite. */
+  /** Base URL of the HTTP API backing the suite. */
   apiBaseUrl: string;
   /** Known test accounts, keyed by role name. */
   credentials: Record<string, Credentials>;

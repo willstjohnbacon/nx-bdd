@@ -26,6 +26,7 @@
     "@swc/helpers": "~0.5.18",
     "@types/jest": "~30.0.0",
     "@types/node": "^22.0.0",
+    "allure": "^3.16.0",
     "allure-playwright": "^3.11.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",

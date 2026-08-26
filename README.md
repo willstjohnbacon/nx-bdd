@@ -2,7 +2,9 @@
 
 Development workspace for **`@willstjohnbacon/nx-bdd`** — a custom Nx plugin that orchestrates Behaviour-Driven Development testing across an enterprise Nx workspace.
 
-The plugin is both a **build-time scaffolding tool** and a **run-time testing library**, bridging Playwright, Cucumber (via `playwright-bdd`), Allure reporting and shared testing utilities across microservices (NestJS) and frontends (Angular).
+The plugin is both a **build-time scaffolding tool** and a **run-time testing library**, bridging Playwright, Cucumber (via `playwright-bdd`), Allure reporting and shared testing utilities across every app in a workspace.
+
+Nothing in it is tied to a particular framework: the generator needs an Nx project and Playwright, and the runtime needs a URL to point a browser at. Angular, Nest, Next, Remix, Vite, Express — or a service that is not Node at all — are all just a `baseUrl`.
 
 > Consumer documentation lives in [`packages/nx-bdd/README.md`](packages/nx-bdd/README.md).
 

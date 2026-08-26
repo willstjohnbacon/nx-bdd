@@ -22,6 +22,16 @@
       "description": "Glob for step definition files, relative to the project root.",
       "default": "src/steps/**/*.ts"
     },
+    "baseUrl": {
+      "type": "string",
+      "description": "Default URL the browser navigates to, used when BASE_URL is unset. Point this at whatever serves the app under test.",
+      "default": "http://localhost:4200"
+    },
+    "apiBaseUrl": {
+      "type": "string",
+      "description": "Default base URL of the HTTP API backing the suite, used when API_BASE_URL is unset.",
+      "default": "http://localhost:3000/api"
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the generated files.",

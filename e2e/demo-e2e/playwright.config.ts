@@ -5,15 +5,15 @@ import type { NxBddOptions } from '@willstjohnbacon/nx-bdd';
 import { defineBddConfig } from 'playwright-bdd';
 
 // Compiles Cucumber feature files into native Playwright tests.
-// Run `nx run <%= project %>:bddgen` (or just `nx e2e <%= project %>`, which
+// Run `nx run demo-e2e:bddgen` (or just `nx e2e demo-e2e`, which
 // depends on it) after adding or renaming a .feature file.
 const testDir = defineBddConfig({
-  features: '<%= featuresGlob %>',
-  steps: '<%= stepsGlob %>',
+  features: 'src/features/**/*.feature',
+  steps: 'src/steps/**/*.ts',
 });
 
 // For CI, set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || '<%= baseUrl %>';
+const baseURL = process.env['BASE_URL'] || 'http://127.0.0.1:4300';
 
 // Reporter option paths are resolved against process.cwd(), which differs
 // between Nx's inferred Playwright targets (project root) and the legacy
@@ -24,6 +24,8 @@ const allureResultsDir = join(workspaceRoot, 'dist', 'allure-results');
 
 export default defineConfig<NxBddOptions>({
   testDir,
+  forbidOnly: Boolean(process.env['CI']),
+  retries: process.env['CI'] ? 1 : 0,
   reporter: [['list'], ['allure-playwright', { resultsDir: allureResultsDir }]],
   use: {
     baseURL,
@@ -32,23 +34,23 @@ export default defineConfig<NxBddOptions>({
     video: 'retain-on-failure',
 
     // --- Shared @willstjohnbacon/nx-bdd fixture options ---
-    apiBaseUrl: process.env['API_BASE_URL'] || '<%= apiBaseUrl %>',
+    apiBaseUrl: process.env['API_BASE_URL'] || 'http://127.0.0.1:4300/api',
     credentials: {
       admin: {
         username: process.env['E2E_ADMIN_USERNAME'] || 'admin',
         password: process.env['E2E_ADMIN_PASSWORD'] || 'admin',
       },
+      viewer: { username: 'viewer', password: 'viewer' },
     },
     // Teach the shared `loginAs` / `adminContext` fixtures how this app signs a
-    // user in. Until this is filled in, the steps that need an authenticated
-    // session fail with an explanatory error rather than a timeout.
-    // authenticate: async (page, { username, password }) => {
-    //   await page.goto('/login');
-    //   await page.getByLabel('Username').fill(username);
-    //   await page.getByLabel('Password').fill(password);
-    //   await page.getByRole('button', { name: 'Sign in' }).click();
-    //   await page.waitForURL('**/dashboard');
-    // },
+    // user in. This is the one piece every consuming app has to supply.
+    authenticate: async (page, { username, password }) => {
+      await page.goto('/login');
+      await page.getByLabel('Username').fill(username);
+      await page.getByLabel('Password').fill(password);
+      await page.getByRole('button', { name: 'Sign in' }).click();
+      await page.waitForURL('**/dashboard');
+    },
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
@@ -56,10 +58,10 @@ export default defineConfig<NxBddOptions>({
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
   // Start the stack under test before the suite runs.
-  // webServer: {
-  //   command: 'npx nx serve my-app',
-  //   url: baseURL,
-  //   reuseExistingServer: true,
-  //   cwd: workspaceRoot,
-  // },
+  webServer: {
+    command: 'npx nx serve demo-app',
+    url: baseURL,
+    reuseExistingServer: !process.env['CI'],
+    cwd: workspaceRoot,
+  },
 });
