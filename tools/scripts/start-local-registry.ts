@@ -31,6 +31,11 @@ export default async () => {
     stageChanges: false,
     gitCommit: false,
     gitTag: false,
+    // nx.json's `release.git.push` is `true` for the real release workflow
+    // (release.yml) and applies here too unless overridden — without this,
+    // the e2e run tries to push to origin and fails in any CI job whose
+    // token lacks write access (e.g. a PR-triggered check).
+    gitPush: false,
     firstRelease: true,
     versionActionsOptionsOverrides: {
       skipLockFileUpdate: true,
