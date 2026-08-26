@@ -25,6 +25,18 @@ export type AuthenticateFn = (
   credentials: Credentials
 ) => Promise<void>;
 
+/**
+ * Wraps {@link AuthenticateFn} so the option's value is never itself a bare
+ * function. Playwright treats any function found in a `use: {}` option as a
+ * fixture-provider override (with the `({ fixtures }, use) => {}` shape) and
+ * fails config validation, so consumers set `authenticate: { fn: async
+ * (page, credentials) => {...} }` rather than `authenticate: async (page,
+ * credentials) => {...}`.
+ */
+export interface AuthenticateHandler {
+  fn: AuthenticateFn;
+}
+
 /** Collects teardown work to run after the current scenario, LIFO. */
 export interface CleanupRegistry {
   add(task: () => void | Promise<void>): void;
@@ -41,7 +53,7 @@ export interface NxBddOptions {
   /** Path to a saved storage state, used in place of logging in. */
   adminStorageState: string | undefined;
   /** How this app logs a user in. Required unless `adminStorageState` is set. */
-  authenticate: AuthenticateFn | undefined;
+  authenticate: AuthenticateHandler | undefined;
 }
 
 export interface NxBddFixtures {
@@ -61,11 +73,13 @@ const CONFIG_HINT = `Set it in your playwright.config.ts:
 
   export default defineConfig({
     use: {
-      authenticate: async (page, { username, password }) => {
-        await page.goto('/login');
-        await page.getByLabel('Username').fill(username);
-        await page.getByLabel('Password').fill(password);
-        await page.getByRole('button', { name: 'Sign in' }).click();
+      authenticate: {
+        fn: async (page, { username, password }) => {
+          await page.goto('/login');
+          await page.getByLabel('Username').fill(username);
+          await page.getByLabel('Password').fill(password);
+          await page.getByRole('button', { name: 'Sign in' }).click();
+        },
       },
     },
   });`;
@@ -87,7 +101,7 @@ function requireCredentials(
 }
 
 function requireAuthenticate(
-  authenticate: AuthenticateFn | undefined
+  authenticate: AuthenticateHandler | undefined
 ): AuthenticateFn {
   if (!authenticate) {
     throw new Error(
@@ -95,7 +109,7 @@ function requireAuthenticate(
         `to log a user in.\n\n${CONFIG_HINT}`
     );
   }
-  return authenticate;
+  return authenticate.fn;
 }
 
 export const test = bddBase.extend<NxBddOptions & NxBddFixtures>({

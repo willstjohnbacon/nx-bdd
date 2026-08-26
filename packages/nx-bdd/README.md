@@ -154,12 +154,16 @@ export default defineConfig<NxBddOptions>({
       auditor: { username: 'auditor', password: 'auditor' },
     },
     // How this app signs a user in — required by loginAs / adminContext.
-    authenticate: async (page, { username, password }) => {
-      await page.goto('/login');
-      await page.getByLabel('Username').fill(username);
-      await page.getByLabel('Password').fill(password);
-      await page.getByRole('button', { name: 'Sign in' }).click();
-      await page.waitForURL('**/dashboard');
+    // Wrapped in an object: Playwright treats a bare function under `use` as
+    // a fixture override, not an option value.
+    authenticate: {
+      fn: async (page, { username, password }) => {
+        await page.goto('/login');
+        await page.getByLabel('Username').fill(username);
+        await page.getByLabel('Password').fill(password);
+        await page.getByRole('button', { name: 'Sign in' }).click();
+        await page.waitForURL('**/dashboard');
+      },
     },
   },
 });

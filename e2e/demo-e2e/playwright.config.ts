@@ -44,12 +44,19 @@ export default defineConfig<NxBddOptions>({
     },
     // Teach the shared `loginAs` / `adminContext` fixtures how this app signs a
     // user in. This is the one piece every consuming app has to supply.
-    authenticate: async (page, { username, password }) => {
-      await page.goto('/login');
-      await page.getByLabel('Username').fill(username);
-      await page.getByLabel('Password').fill(password);
-      await page.getByRole('button', { name: 'Sign in' }).click();
-      await page.waitForURL('**/dashboard');
+    //
+    // Wrapped in an object: Playwright treats a bare function under `use` as
+    // a fixture override (with the `({ fixtures }, use) => {}` signature)
+    // rather than as an option's value, so the callback can't be assigned
+    // directly here.
+    authenticate: {
+      fn: async (page, { username, password }) => {
+        await page.goto('/login');
+        await page.getByLabel('Username').fill(username);
+        await page.getByLabel('Password').fill(password);
+        await page.getByRole('button', { name: 'Sign in' }).click();
+        await page.waitForURL('**/dashboard');
+      },
     },
   },
   projects: [

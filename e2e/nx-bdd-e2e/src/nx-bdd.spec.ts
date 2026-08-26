@@ -119,11 +119,18 @@ describe('@willstjohnbacon/nx-bdd', () => {
 
     // Playwright discovering the scenario proves the config, the generated
     // specs and the shared step definitions all resolve together.
+    //
+    // Playwright refuses to run at all if it sees `JEST_WORKER_ID` in its
+    // env, to guard against being accidentally picked up by a Jest run —
+    // strip it since this process IS a Jest worker, even though it's only
+    // shelling out to Playwright rather than importing it.
+    const envWithoutJest = { ...process.env };
+    delete envWithoutJest['JEST_WORKER_ID'];
     const listed = execSync(
       `npx playwright test --config playwright.config.mts --list`,
       {
         cwd: join(projectDirectory, `apps/${E2E_APP}`),
-        env: process.env,
+        env: envWithoutJest,
         encoding: 'utf-8',
       }
     );
@@ -143,7 +150,10 @@ function createTestProject() {
   mkdirSync(dirname(projectDirectory), { recursive: true });
 
   execSync(
-    `npx create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --no-interactive`,
+    // The project lands under this repo's own `tmp/`, which the root
+    // .gitignore excludes — `create-nx-workspace`'s own git init otherwise
+    // fails trying to `git add` files it considers ignored, so skip it.
+    `npx create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --skipGit --no-interactive`,
     {
       cwd: dirname(projectDirectory),
       stdio: 'inherit',
